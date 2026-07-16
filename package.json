@@ -1,0 +1,35 @@
+{
+  "name": "tech-store-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caiductien-dotcom/tech-store-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/caiductien-dotcom/tech-store-backend/issues"
+  },
+  "homepage": "https://github.com/caiductien-dotcom/tech-store-backend#readme",
+  "dependencies": {
+    "@prisma/client": "^7.8.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pg": "^8.22.0",
+    "pg-hstore": "^2.3.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "prisma": "^7.8.0"
+  }
+}
