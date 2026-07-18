@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+const authRoutes = require('./routes/auth.routes');
+
 const app = express();
 
 // MIDDLEWARE
@@ -10,6 +12,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ROUTES
+app.use('/api/auth', authRoutes);
+
 app.get('/', (req, res) => {
     res.status(200).json({
         message: "Welcome to Backend Tech Store Ecommerce - Node.js & Prisma!"
