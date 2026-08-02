@@ -1,0 +1,436 @@
+openapi: 3.0.0
+
+info:
+  title: Tech Store API
+  description: API documentation for Tech Store Ecommerce Backend.
+  version: "1.0"
+
+servers:
+  - url: http://localhost:5000
+    description: Local Express Server
+
+tags:
+  - name: Authentication
+    description: User registration, login, and profile APIs
+  - name: Category
+    description: Product category management APIs
+
+paths:
+  /register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Register successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterResponse"
+        "400":
+          description: Missing required fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                message: "Name, email and password are required"
+                errorCode: AUTH_001
+                timestamp: "2026-07-24T10:30:00Z"
+                path: /register
+        "409":
+          description: Email already exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                message: Email already exists
+                errorCode: AUTH_003
+                timestamp: "2026-07-24T10:30:00Z"
+                path: /register
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Login
+      description: Authenticate user and return JWT token.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Email and password are required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                message: Email and password are required
+                errorCode: AUTH_001
+                timestamp: "2026-07-24T10:30:00Z"
+                path: /login
+        "401":
+          description: Invalid email or password.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                message: Invalid email or password
+                errorCode: AUTH_004
+                timestamp: "2026-07-24T10:30:00Z"
+                path: /login
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current logged-in user profile
+      description: Retrieve profile information of the currently authenticated user using JWT Token.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User profile retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetMeResponse"
+        "401":
+          description: Unauthorized - Token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                message: Token missing or invalid
+                errorCode: AUTH_002
+                timestamp: "2026-07-24T10:30:00Z"
+                path: /me
+
+  /api/categories:
+    get:
+      tags:
+        - Category
+      summary: Get all product categories
+      description: Retrieve a list of all available categories (Public access).
+      responses:
+        "200":
+          description: Categories fetched successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Category"
+
+    post:
+      tags:
+        - Category
+      summary: Create a new category
+      description: Create a product category (Requires Admin role).
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryRequest"
+      responses:
+        "201":
+          description: Category created successfully.
+        "400":
+          description: Bad request - Missing or duplicate category name.
+        "401":
+          description: Unauthorized - Missing or invalid token.
+        "403":
+          description: Forbidden - Action allowed for Admins only.
+
+  /api/categories/{id}:
+    get:
+      tags:
+        - Category
+      summary: Get category by ID
+      description: Retrieve details of a specific category.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Category retrieved successfully.
+        "404":
+          description: Category not found.
+
+    put:
+      tags:
+        - Category
+      summary: Update a category
+      description: Update an existing category (Requires Admin role).
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryRequest"
+      responses:
+        "200":
+          description: Category updated successfully.
+        "403":
+          description: Forbidden - Admin role required.
+
+    delete:
+      tags:
+        - Category
+      summary: Delete a category
+      description: Delete a category by ID (Requires Admin role).
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Category deleted successfully.
+        "403":
+          description: Forbidden - Admin role required.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          example: Nguyen Van A
+        email:
+          type: string
+          format: email
+          example: abc@gmail.com
+        password:
+          type: string
+          format: password
+          example: "$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: abc@gmail.com
+        password:
+          type: string
+          format: password
+          example: "$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
+
+    RegisterUser:
+      type: object
+      description: Registered user information.
+      required:
+        - id
+        - name
+        - email
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Nguyen Van A
+        email:
+          type: string
+          format: email
+          example: abc@gmail.com
+
+    User:
+      type: object
+      description: User information.
+      required:
+        - id
+        - name
+        - email
+        - role
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Nguyen Van A
+        email:
+          type: string
+          format: email
+          example: abc@gmail.com
+        role:
+          type: string
+          example: CUSTOMER
+
+    Category:
+      type: object
+      properties:
+        category_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Laptop
+        description:
+          type: string
+          example: High performance gaming laptops
+
+    CategoryRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: Laptop
+        description:
+          type: string
+          example: High performance gaming laptops
+
+    RegisterResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Register successfully
+        data:
+          $ref: "#/components/schemas/RegisterUser"
+
+    LoginResponse:
+      type: object
+      required:
+        - success
+        - message
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Login successfully
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+            user:
+              $ref: "#/components/schemas/User"
+
+    GetMeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: "#/components/schemas/User"
+
+    ErrorResponse:
+      type: object
+      description: Standard error response format.
+      required:
+        - success
+        - message
+        - errorCode
+        - timestamp
+        - path
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Invalid email or password
+        errorCode:
+          type: string
+          example: AUTH_004
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-07-24T10:30:00Z"
+        path:
+          type: string
+          example: /login

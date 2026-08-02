@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const categoryController = require('../controllers/category.controller');
-// cho middleware auth vao day de kiem tra token va quyen admin
 const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
 
-// lay danh sach tat ca danh muc (khong can dang nhap)
+// public routes(ai cung xem duoc)
 router.get('/', categoryController.getAllCategories);
+router.get('/:id', categoryController.getCategoryById);
 
-// tao danh muc moi (chi cho phep admin)
+// protected routes(chi co admin moi duoc phep tao, cap nhat, xoa danh muc)
 router.post('/', verifyToken, isAdmin, categoryController.createCategory);
+router.put('/:id', verifyToken, isAdmin, categoryController.updateCategory);
+router.delete('/:id', verifyToken, isAdmin, categoryController.deleteCategory);
 
 module.exports = router;
