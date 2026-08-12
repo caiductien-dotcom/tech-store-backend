@@ -3,9 +3,11 @@ openapi: 3.0.0
 info:
   title: Tech Store API
   description: API documentation for Tech Store Ecommerce Backend.
-  version: "1.0"
+  version: '0.1'
 
 servers:
+  - url: https://tech-store-backend-37qq.onrender.com
+    description: Production Render Server
   - url: http://localhost:5000
     description: Local Express Server
 
@@ -47,7 +49,7 @@ paths:
                 message: "Name, email and password are required"
                 errorCode: AUTH_001
                 timestamp: "2026-07-24T10:30:00Z"
-                path: /register
+                path: /api/auth/register
         "409":
           description: Email already exists.
           content:
@@ -59,7 +61,7 @@ paths:
                 message: Email already exists
                 errorCode: AUTH_003
                 timestamp: "2026-07-24T10:30:00Z"
-                path: /register
+                path: /api/auth/register
         "500":
           description: Internal server error.
           content:
@@ -98,7 +100,7 @@ paths:
                 message: Email and password are required
                 errorCode: AUTH_001
                 timestamp: "2026-07-24T10:30:00Z"
-                path: /login
+                path: /api/auth/login
         "401":
           description: Invalid email or password.
           content:
@@ -110,7 +112,7 @@ paths:
                 message: Invalid email or password
                 errorCode: AUTH_004
                 timestamp: "2026-07-24T10:30:00Z"
-                path: /login
+                path: /api/auth/login
         "500":
           description: Internal server error.
           content:
@@ -144,7 +146,7 @@ paths:
                 message: Token missing or invalid
                 errorCode: AUTH_002
                 timestamp: "2026-07-24T10:30:00Z"
-                path: /me
+                path: /api/auth/me
 
   /api/categories:
     get:
@@ -281,7 +283,7 @@ components:
         password:
           type: string
           format: password
-          example: "$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
+          example: 123456
 
     LoginRequest:
       type: object
@@ -296,7 +298,7 @@ components:
         password:
           type: string
           format: password
-          example: "$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
+          example: 123456
 
     RegisterUser:
       type: object
@@ -433,4 +435,4 @@ components:
           example: "2026-07-24T10:30:00Z"
         path:
           type: string
-          example: /login
+          example: /api/auth/login
