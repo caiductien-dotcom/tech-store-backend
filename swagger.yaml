@@ -16,7 +16,7 @@ tags:
     description: Product category management APIs
 
 paths:
-  /register:
+  /api/auth/register:
     post:
       tags:
         - Authentication
@@ -67,7 +67,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /login:
+  /api/auth/login:
     post:
       tags:
         - Authentication
@@ -118,7 +118,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /me:
+  /api/auth/me:
     get:
       tags:
         - Authentication
