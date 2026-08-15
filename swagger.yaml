@@ -16,6 +16,8 @@ tags:
     description: User registration, login, and profile APIs
   - name: Category
     description: Product category management APIs
+  - name: Product
+    description: Product management APIs
 
 paths:
   /api/auth/guest:
@@ -265,6 +267,183 @@ paths:
         '403':
           description: Forbidden - Admin role required.
 
+  /api/products:
+    get:
+      tags:
+        - Product
+      summary: Get all products
+      description: Retrieve a paginated list of active products. Supports search by name and filter by category (Public access).
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of items per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search products by name (case-insensitive)
+        - in: query
+          name: category_id
+          schema:
+            type: integer
+          description: Filter products by category ID
+      responses:
+        "200":
+          description: Products fetched successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 50
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 10
+                      totalPages:
+                        type: integer
+                        example: 5
+        "500":
+          description: Internal server error.
+
+    post:
+      tags:
+        - Product
+      summary: Create a new product
+      description: Create a new product. seller_id is automatically taken from the JWT token (Requires Admin role).
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductRequest"
+      responses:
+        "201":
+          description: Product created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Product created successfully!
+                  data:
+                    $ref: "#/components/schemas/Product"
+        "400":
+          description: Bad request - Missing required fields.
+        "401":
+          description: Unauthorized - Missing or invalid token.
+        "403":
+          description: Forbidden - Action allowed for Admins only.
+
+  /api/products/{id}:
+    get:
+      tags:
+        - Product
+      summary: Get product by ID
+      description: Retrieve details of a specific product including category, seller info, and variants.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Product retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/ProductDetail"
+        "404":
+          description: Product not found.
+
+    put:
+      tags:
+        - Product
+      summary: Update a product
+      description: Update an existing product (Requires Admin role). Only provided fields will be updated.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductRequest"
+      responses:
+        "200":
+          description: Product updated successfully.
+        "403":
+          description: Forbidden - Admin role required.
+        "404":
+          description: Product not found.
+
+    delete:
+      tags:
+        - Product
+      summary: Delete a product
+      description: Delete a product by ID (Requires Admin role).
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Product deleted successfully.
+        "403":
+          description: Forbidden - Admin role required.
+        "404":
+          description: Product not found.
+
 components:
   securitySchemes:
     BearerAuth:
@@ -394,6 +573,153 @@ components:
             role:
               type: string
               example: GUEST
+
+    Product:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          example: 1
+        seller_id:
+          type: integer
+          example: 1
+        category_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: iPhone 15 Pro Max
+        description:
+          type: string
+          example: Latest Apple smartphone with A17 Pro chip
+        image_url:
+          type: string
+          example: https://example.com/iphone15.jpg
+        brand:
+          type: string
+          example: Apple
+        price:
+          type: number
+          format: decimal
+          example: 29990000.00
+        discount_percent:
+          type: integer
+          example: 10
+        warranty_months:
+          type: integer
+          example: 12
+        sold_count:
+          type: integer
+          example: 150
+        rating_avg:
+          type: number
+          example: 4.5
+        review_count:
+          type: integer
+          example: 30
+        low_stock_threshold:
+          type: integer
+          example: 5
+        status:
+          type: string
+          example: active
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        category:
+          $ref: "#/components/schemas/Category"
+        seller:
+          type: object
+          properties:
+            user_id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: Nguyen Van A
+            email:
+              type: string
+              example: admin@gmail.com
+
+    ProductDetail:
+      allOf:
+        - $ref: "#/components/schemas/Product"
+        - type: object
+          properties:
+            variants:
+              type: array
+              items:
+                $ref: "#/components/schemas/ProductVariant"
+
+    ProductVariant:
+      type: object
+      properties:
+        variant_id:
+          type: integer
+          example: 1
+        product_id:
+          type: integer
+          example: 1
+        sku:
+          type: string
+          example: IPH15PM-256-BLK
+        color:
+          type: string
+          example: Black
+        size:
+          type: string
+          example: 256GB
+        price:
+          type: number
+          format: decimal
+          example: 29990000.00
+        stock:
+          type: integer
+          example: 50
+
+    ProductRequest:
+      type: object
+      required:
+        - name
+        - price
+        - category_id
+      properties:
+        name:
+          type: string
+          example: iPhone 15 Pro Max
+        description:
+          type: string
+          example: Latest Apple smartphone with A17 Pro chip
+        image_url:
+          type: string
+          example: https://example.com/iphone15.jpg
+        brand:
+          type: string
+          example: Apple
+        price:
+          type: number
+          example: 29990000.00
+        discount_percent:
+          type: integer
+          example: 10
+        warranty_months:
+          type: integer
+          example: 12
+        low_stock_threshold:
+          type: integer
+          example: 5
+        category_id:
+          type: integer
+          example: 1
+        status:
+          type: string
+          example: active
+          enum:
+            - active
+            - inactive
 
     RegisterResponse:
       type: object
