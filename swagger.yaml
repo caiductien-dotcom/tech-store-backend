@@ -20,38 +20,25 @@ tags:
 paths:
   /api/auth/guest:
     post:
-      summary: Initialize a guest session
-      description: Issues a JWT token for anonymous visitors to track analytics and temporary cart sessions.
       tags:
         - Authentication
+      summary: Initialize a guest session
+      description: Issues a JWT token for anonymous visitors to track analytics and temporary cart sessions.
+      operationId: createGuestSession
       responses:
         '200':
-          description: Guest session created successfully
+          description: Guest session created successfully.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: Guest session created successfully
-                  data:
-                    type: object
-                    properties:
-                      token:
-                        type: string
-                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-                      guestId:
-                        type: string
-                        example: guest_8b05658e-0cf0-4cfa-9311-57ff0e3d2ba3
-                      role:
-                        type: string
-                        example: GUEST
+                $ref: "#/components/schemas/GuestResponse"
         '500':
-          description: Internal server error
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/auth/register:
     post:
       tags:
@@ -66,37 +53,25 @@ paths:
             schema:
               $ref: "#/components/schemas/RegisterRequest"
       responses:
-        "201":
+        '201':
           description: Register successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/RegisterResponse"
-        "400":
+        '400':
           description: Missing required fields.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                success: false
-                message: "Name, email and password are required"
-                errorCode: AUTH_001
-                timestamp: "2026-07-24T10:30:00Z"
-                path: /api/auth/register
-        "409":
+        '409':
           description: Email already exists.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                success: false
-                message: Email already exists
-                errorCode: AUTH_003
-                timestamp: "2026-07-24T10:30:00Z"
-                path: /api/auth/register
-        "500":
+        '500':
           description: Internal server error.
           content:
             application/json:
@@ -117,37 +92,25 @@ paths:
             schema:
               $ref: "#/components/schemas/LoginRequest"
       responses:
-        "200":
+        '200':
           description: Login successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/LoginResponse"
-        "400":
+        '400':
           description: Email and password are required.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                success: false
-                message: Email and password are required
-                errorCode: AUTH_001
-                timestamp: "2026-07-24T10:30:00Z"
-                path: /api/auth/login
-        "401":
+        '401':
           description: Invalid email or password.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                success: false
-                message: Invalid email or password
-                errorCode: AUTH_004
-                timestamp: "2026-07-24T10:30:00Z"
-                path: /api/auth/login
-        "500":
+        '500':
           description: Internal server error.
           content:
             application/json:
@@ -159,37 +122,33 @@ paths:
       tags:
         - Authentication
       summary: Get current logged-in user profile
-      description: Retrieve profile information of the currently authenticated user using JWT Token.
+      description: Retrieve profile information of the currently authenticated user (or guest) using JWT Token.
       security:
         - BearerAuth: []
       responses:
-        "200":
+        '200':
           description: User profile retrieved successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetMeResponse"
-        "401":
+        '401':
           description: Unauthorized - Token missing or invalid.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                success: false
-                message: Token missing or invalid
-                errorCode: AUTH_002
-                timestamp: "2026-07-24T10:30:00Z"
-                path: /api/auth/me
 
   /api/categories:
     get:
       tags:
         - Category
       summary: Get all product categories
-      description: Retrieve a list of all available categories (Public access).
+      description: Retrieve a list of all available categories (Requires Guest/Customer/Admin token for tracking).
+      security:
+        - BearerAuth: []
       responses:
-        "200":
+        '200':
           description: Categories fetched successfully.
           content:
             application/json:
@@ -203,6 +162,12 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/Category"
+        '401':
+          description: Unauthorized - Token missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
@@ -218,13 +183,13 @@ paths:
             schema:
               $ref: "#/components/schemas/CategoryRequest"
       responses:
-        "201":
+        '201':
           description: Category created successfully.
-        "400":
+        '400':
           description: Bad request - Missing or duplicate category name.
-        "401":
+        '401':
           description: Unauthorized - Missing or invalid token.
-        "403":
+        '403':
           description: Forbidden - Action allowed for Admins only.
 
   /api/categories/{id}:
@@ -233,6 +198,8 @@ paths:
         - Category
       summary: Get category by ID
       description: Retrieve details of a specific category.
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: id
@@ -241,9 +208,11 @@ paths:
             type: integer
           example: 1
       responses:
-        "200":
+        '200':
           description: Category retrieved successfully.
-        "404":
+        '401':
+          description: Unauthorized - Missing or invalid token.
+        '404':
           description: Category not found.
 
     put:
@@ -267,9 +236,11 @@ paths:
             schema:
               $ref: "#/components/schemas/CategoryRequest"
       responses:
-        "200":
+        '200':
           description: Category updated successfully.
-        "403":
+        '401':
+          description: Unauthorized - Missing or invalid token.
+        '403':
           description: Forbidden - Admin role required.
 
     delete:
@@ -287,9 +258,11 @@ paths:
             type: integer
           example: 1
       responses:
-        "200":
+        '200':
           description: Category deleted successfully.
-        "403":
+        '401':
+          description: Unauthorized - Missing or invalid token.
+        '403':
           description: Forbidden - Admin role required.
 
 components:
@@ -359,12 +332,11 @@ components:
       required:
         - id
         - name
-        - email
         - role
       properties:
         id:
-          type: integer
-          example: 1
+          type: string
+          example: "1"
         name:
           type: string
           example: Nguyen Van A
@@ -400,6 +372,28 @@ components:
         description:
           type: string
           example: High performance gaming laptops
+
+    GuestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Guest session created successfully
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+            guestId:
+              type: string
+              example: guest_8b05658e-0cf0-4cfa-9311-57ff0e3d2ba3
+            role:
+              type: string
+              example: GUEST
 
     RegisterResponse:
       type: object
@@ -466,7 +460,7 @@ components:
         timestamp:
           type: string
           format: date-time
-          example: "2026-07-24T10:30:00Z"
+          example: "2026-08-15T10:30:00Z"
         path:
           type: string
           example: /api/auth/login
