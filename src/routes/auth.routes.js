@@ -12,4 +12,7 @@ router.post('/login', authController.login);
 // GET http://localhost:5000/api/auth/me 
 router.get('/me', verifyToken, authController.getMe);
 
+// POST http://localhost:5000/api/auth/guest
+router.post("/guest", authController.createGuestSession);
+
 module.exports = router;

@@ -1,6 +1,44 @@
 const prisma = require("../prisma/prisma");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto"); // bo sung module crypto de tao guestId ngau nhien
+
+// Cap token dinh danh an danh cho  Guest
+exports.createGuestSession = async (req, res) => {
+    try {
+        // Tao guestId duy nhat cho moi phien truy cap cua khach
+        const guestId = `guest_${crypto.randomUUID()}`;
+
+        // Tao JWT mang role GUEST
+        const token = jwt.sign(
+            { 
+                userId: guestId, 
+                role: "GUEST",
+                isGuest: true 
+            },
+            process.env.JWT_SECRET || 'secret_key_default',
+            { expiresIn: "7d" } // Phien guest thuong duy tri 7 ngay
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Guest session created successfully",
+            data: {
+                token,
+                guestId,
+                role: "GUEST"
+            }
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: err.message,
+            errorCode: "SYS_500",
+            timestamp: new Date().toISOString(),
+            path: req.originalUrl
+        });
+    }
+};
 
 // dang ki
 exports.register = async (req, res) => {
@@ -123,7 +161,20 @@ exports.login = async (req, res) => {
 // lay thong tin nguoi dung tu token
 exports.getMe = async (req, res) => {
     try {
-        // req.user duoc gan tu auth.middleware (verifyToken)
+        // Neu token la cua Guest -> Tra ve luon thong tin Guest, khong can query database
+        if (req.user && (req.user.isGuest || req.user.role === 'GUEST')) {
+            return res.status(200).json({
+                success: true,
+                data: {
+                    id: req.user.userId,
+                    name: "Guest User",
+                    role: "GUEST",
+                    isGuest: true
+                }
+            });
+        }
+
+        // Token cua User chinh thuc -> Query DB
         const user = await prisma.user.findUnique({
             where: { user_id: req.user.userId }
         });

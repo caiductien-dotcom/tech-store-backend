@@ -18,6 +18,40 @@ tags:
     description: Product category management APIs
 
 paths:
+  /api/auth/guest:
+    post:
+      summary: Initialize a guest session
+      description: Issues a JWT token for anonymous visitors to track analytics and temporary cart sessions.
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Guest session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Guest session created successfully
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      guestId:
+                        type: string
+                        example: guest_8b05658e-0cf0-4cfa-9311-57ff0e3d2ba3
+                      role:
+                        type: string
+                        example: GUEST
+        '500':
+          description: Internal server error
   /api/auth/register:
     post:
       tags:
