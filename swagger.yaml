@@ -450,7 +450,7 @@ paths:
     post:
       tags:
         - Order
-      summary: Create order from cart (Checkout)
+      summary: Create order from cart
       description: Automatically checkout all items in cart with is_selected = true. Validates stock, deducts inventory, creates payment record and clears ordered items from cart (Requires Customer role).
       security:
         - BearerAuth: []
@@ -488,7 +488,7 @@ paths:
     get:
       tags:
         - Order
-      summary: Get all orders (Admin)
+      summary: Get all orders
       description: Retrieve a paginated list of all customer orders in the system (Requires Admin role).
       security:
         - BearerAuth: []
@@ -555,7 +555,7 @@ paths:
     get:
       tags:
         - Order
-      summary: Get my orders (Customer)
+      summary: Get my orders
       description: Retrieve a paginated list of orders placed by the current logged-in customer (Requires Customer role).
       security:
         - BearerAuth: []
@@ -648,7 +648,7 @@ paths:
     delete:
       tags:
         - Order
-      summary: Delete order (Admin)
+      summary: Delete order
       description: Permanently delete an order and associated items (Requires Admin role).
       security:
         - BearerAuth: []
@@ -673,7 +673,7 @@ paths:
     put:
       tags:
         - Order
-      summary: Cancel own order (Customer)
+      summary: Cancel own order
       description: Cancel an order if it is still in 'pending' status. Automatically restores variant stock and cancels associated payment (Requires Customer role).
       security:
         - BearerAuth: []
@@ -700,7 +700,7 @@ paths:
     put:
       tags:
         - Order
-      summary: Update order status (Admin)
+      summary: Update order status
       description: Transition order status (pending -> confirmed -> shipping -> delivered / cancelled). If updated to cancelled, inventory is automatically restored. If updated to delivered with COD, payment is marked as completed (Requires Admin role).
       security:
         - BearerAuth: []
@@ -1223,4 +1223,4 @@ components:
         paid_at:
           type: string
           format: date-time
-          nullable: true
+          nullable: true
