@@ -20,6 +20,8 @@ tags:
     description: Product management APIs
   - name: Order
     description: Order checkout and management APIs (Cart-driven & Role-based)
+  - name: Shipping
+    description: Shipping calculation and carrier management APIs
 
 paths:
   /api/auth/guest:
@@ -728,6 +730,42 @@ paths:
           description: Forbidden - Admin role required.
         "404":
           description: Order not found.
+  /api/shipping/calculate:
+    post:
+      tags:
+        - Shipping
+      summary: Calculate shipping fees and methods
+      description: Returns available shipping methods, estimated delivery time, and shipping fees based on customer province and order total.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - province
+              properties:
+                province:
+                  type: string
+                  example: "Hà Nội"
+                total_amount:
+                  type: number
+                  example: 5500000
+      responses:
+        '200':
+          description: Shipping fee calculated successfully.
+        '400':
+          description: Missing province.
+
+  /api/shipping/carriers:
+    get:
+      tags:
+        - Shipping
+      summary: Get supported shipping carriers
+      description: Returns list of integrated couriers (GHTK, GHN, Viettel Post, etc.).
+      responses:
+        '200':
+          description: Carriers retrieved successfully.
 
 
 components:

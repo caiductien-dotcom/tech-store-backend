@@ -290,15 +290,20 @@ exports.cancelOrder = async (req, res) => {
         const user_id = Number(req.user.userId);
 
         const order = await prisma.order.findUnique({
-            where: { order_id: Number(id) },
-            include: {
-                order_items: {
-                    include: {
-                        variant: true,
-                    },
-                },
+        where: { order_id: Number(id) },
+        include: {
+            order_items: {
+                include: {
+                    variant: {
+                        include: {
+                            product: true
+                        }
+                    }
+                }
             },
-        });
+            payments: true
+        }
+    });
 
         if (!order) {
             return res.status(404).json({

@@ -14,6 +14,7 @@ const authRoutes = require('./routes/auth.routes');
 const categoryRoutes = require('./routes/category.routes');
 const productRoutes = require('./routes/product.routes');
 const orderRoutes = require('./routes/order.routes');
+const shippingRoutes = require('./routes/shipping.routes');
 
 const app = express();
 
@@ -30,7 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
-
+app.use('/api/shipping', shippingRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({

@@ -32,9 +32,10 @@ exports.isAdmin = (req, res, next) => {
 
 // Bo loc kiem tra quyen customer
 exports.isCustomer = (req, res, next) => {
-    if (req.user && req.user.role && req.user.role.toUpperCase() === 'CUSTOMER') {
+    const role = req.user && req.user.role ? req.user.role.toUpperCase() : '';
+    if (role === 'CUSTOMER' || role === 'ADMIN') {
         next();
     } else {
-        return res.status(403).json({ message: "Error: Access denied! This action is only allowed for Customers." });
+        return res.status(403).json({ message: "Error: Access denied! Please register an account to place orders." });
     }
-};
+};
