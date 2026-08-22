@@ -29,3 +29,12 @@ exports.isAdmin = (req, res, next) => {
         return res.status(403).json({ message: "Error: Access denied! This action is only allowed for Admins." });
     }
 };
+
+// Bo loc kiem tra quyen customer
+exports.isCustomer = (req, res, next) => {
+    if (req.user && req.user.role && req.user.role.toUpperCase() === 'CUSTOMER') {
+        next();
+    } else {
+        return res.status(403).json({ message: "Error: Access denied! This action is only allowed for Customers." });
+    }
+};
