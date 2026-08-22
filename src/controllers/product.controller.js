@@ -121,6 +121,30 @@ exports.createProduct = async (req, res) => {
             });
         }
 
+        // Kiem tra Category co ton tai hay khong
+        const categoryExists = await prisma.category.findUnique({
+            where: { category_id: Number(category_id) },
+        });
+
+        if (!categoryExists) {
+            return res.status(404).json({
+                success: false,
+                message: `Category with ID ${category_id} does not exist! Please create the category first or use a valid category_id.`,
+            });
+        }
+
+        // Kiem tra Seller (User) co ton tai hay khong
+        const sellerExists = await prisma.user.findUnique({
+            where: { user_id: seller_id },
+        });
+
+        if (!sellerExists) {
+            return res.status(404).json({
+                success: false,
+                message: `Seller/User with ID ${seller_id} from token does not exist in database!`,
+            });
+        }
+
         const newProduct = await prisma.product.create({
             data: {
                 name,
@@ -153,6 +177,13 @@ exports.createProduct = async (req, res) => {
             data: newProduct,
         });
     } catch (error) {
+        if (error.code === "P2003") {
+            return res.status(400).json({
+                success: false,
+                message: "Foreign key constraint failed. Please check if category_id and seller_id exist.",
+                error: error.message,
+            });
+        }
         return res.status(500).json({
             success: false,
             message: "Error occurred while creating product",
