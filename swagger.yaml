@@ -22,6 +22,8 @@ tags:
     description: Order checkout and management APIs (Cart-driven & Role-based)
   - name: Shipping
     description: Shipping calculation and carrier management APIs
+  - name: Payment
+    description: Online payment integration APIs (VNPay Sandbox)
 
 paths:
   /api/auth/guest:
@@ -766,7 +768,75 @@ paths:
       responses:
         '200':
           description: Carriers retrieved successfully.
+  
+  /api/payments/create-vnpay-url:
+    post:
+      tags:
+        - Payment
+      summary: Generate VNPay Sandbox payment URL
+      description: Creates a secure payment URL to redirect the customer to VNPay gateway.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - order_id
+              properties:
+                order_id:
+                  type: integer
+                  example: 1
+                bank_code:
+                  type: string
+                  example: NCB
+                  description: Optional bank code (e.g. NCB, VNPAYQR, VISA)
+      responses:
+        '200':
+          description: Payment URL generated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: VNPay payment URL created successfully!
+                  payment_url:
+                    type: string
+                    example: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?...
+        '400':
+          description: Missing order_id or invalid request.
+        '404':
+          description: Order not found.
 
+  /api/payments/vnpay-return:
+    get:
+      tags:
+        - Payment
+      summary: VNPay Return URL callback
+      description: Handles the redirect callback from VNPay after customer completes or cancels payment. Automatically updates order and payment status.
+      parameters:
+        - in: query
+          name: vnp_ResponseCode
+          schema:
+            type: string
+          description: Response code from VNPay ('00' means success)
+        - in: query
+          name: vnp_SecureHash
+          schema:
+            type: string
+          description: Checksum hash from VNPay
+      responses:
+        '200':
+          description: Payment verified and order confirmed successfully.
+        '400':
+          description: Payment failed, cancelled or invalid signature.
 
 components:
   securitySchemes:
