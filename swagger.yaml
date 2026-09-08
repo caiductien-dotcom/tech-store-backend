@@ -24,6 +24,12 @@ tags:
     description: Shipping calculation and carrier management APIs
   - name: Payment
     description: Online payment integration APIs (VNPay Sandbox)
+  - name: Review
+    description: Product review and rating APIs with verified purchase validation
+  - name: Admin - Dashboard
+    description: Dashboard analytics, overview statistics, top-selling products, and revenue charts (Admin only)
+
+
 
 paths:
   /api/auth/guest:
@@ -838,7 +844,284 @@ paths:
         '400':
           description: Payment failed, cancelled or invalid signature.
 
+  /api/reviews:
+    post:
+      tags:
+        - Review
+      summary: Submit a product review (Delivered order required)
+      description: Allows a customer who has purchased and received a product (order status is delivered) to submit a 1-5 star review with comment and optional images. Automatically recalculates product rating_avg and review_count (Requires Customer role).
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        '201':
+          description: Review submitted successfully and product rating recalculated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Review submitted successfully and product rating recalculated!
+                  data:
+                    $ref: "#/components/schemas/Review"
+                  product_stats:
+                    type: object
+                    properties:
+                      product_id:
+                        type: integer
+                        example: 1
+                      rating_avg:
+                        type: number
+                        example: 4.8
+                      review_count:
+                        type: integer
+                        example: 12
+        '400':
+          description: Bad request - Invalid rating, item not delivered, or already reviewed.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden - Customer role required.
+        '404':
+          description: Order item or product not found.
+
+  /api/reviews/product/{productId}:
+    get:
+      tags:
+        - Review
+      summary: Get reviews for a specific product
+      description: Retrieve a paginated list of reviews for a product, including user info, images, star breakdown, and product rating statistics (Public access).
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: integer
+          example: 1
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Items per page
+        - in: query
+          name: rating
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+          description: Filter by star rating (1 to 5)
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [newest, highest, lowest, oldest]
+            default: newest
+          description: Sort reviews
+      responses:
+        '200':
+          description: Reviews retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductReviewListResponse"
+        '404':
+          description: Product not found.
+
+  /api/products/{id}/reviews:
+    get:
+      tags:
+        - Product
+        - Review
+      summary: Get reviews of product (Sub-resource)
+      description: Alternative endpoint to get reviews for a product directly under /api/products/:id/reviews (Public access).
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: rating
+          schema:
+            type: integer
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [newest, highest, lowest, oldest]
+      responses:
+        '200':
+          description: Reviews retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductReviewListResponse"
+        '404':
+          description: Product not found.
+
+  /api/reviews/my-reviews:
+    get:
+      tags:
+        - Review
+      summary: Get reviews written by logged-in customer
+      description: Retrieve all reviews posted by the current customer (Requires Customer role).
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Reviews retrieved successfully.
+        '401':
+          description: Unauthorized.
+
+  /api/reviews/{id}:
+    delete:
+      tags:
+        - Review
+      summary: Delete a review
+      description: Delete a review (Author or Admin). Automatically recalculates the product's rating_avg and review_count.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Review deleted successfully and rating recalculated.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden - Not the review author or admin.
+        '404':
+          description: Review not found.
+
+  /api/admin/dashboard/stats:
+    get:
+      tags:
+        - Admin - Dashboard
+      summary: Get overview dashboard statistics (Admin only)
+      description: Returns total revenue from delivered orders, total orders, pending orders breakdown, user count, and inventory health (Requires Admin role).
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Dashboard statistics retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStatsResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden - Admin role required.
+
+  /api/admin/dashboard/top-products:
+    get:
+      tags:
+        - Admin - Dashboard
+      summary: Get top-selling products by sold_count (Admin only)
+      description: Returns top 5, 10 or N best-selling products sorted by sold_count (Requires Admin role).
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            example: 5
+          description: Number of top products to return (e.g. 5 or 10)
+      responses:
+        '200':
+          description: Top selling products retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopSellingProductsResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden - Admin role required.
+
+  /api/admin/dashboard/revenue-chart:
+    get:
+      tags:
+        - Admin - Dashboard
+      summary: Get revenue chart data by month or week (Admin only)
+      description: Returns chart data formatted for frontend visualization (by 12 months of the year or by last 7 days) (Requires Admin role).
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [month, week]
+            default: month
+          description: Time period grouping (month or week)
+        - in: query
+          name: year
+          schema:
+            type: integer
+            example: 2026
+          description: Year for monthly revenue chart (default current year)
+      responses:
+        '200':
+          description: Revenue chart data retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueChartResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden - Admin role required.
+
 components:
+
+
   securitySchemes:
     BearerAuth:
       type: http
@@ -1332,3 +1615,308 @@ components:
           type: string
           format: date-time
           nullable: true
+
+    CreateReviewRequest:
+      type: object
+      required:
+        - rating
+      properties:
+        order_item_id:
+          type: integer
+          description: ID of the purchased item in the delivered order (optional if product_id is provided)
+          example: 1
+        product_id:
+          type: integer
+          description: ID of the product to review (optional if order_item_id is provided)
+          example: 1
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+          description: Star rating from 1 to 5
+        title:
+          type: string
+          example: Sản phẩm rất tốt!
+        comment:
+          type: string
+          example: Chất lượng hoàn thiện rất cao, máy chạy êm và pin trâu. Shop giao hàng nhanh đóng gói cẩn thận.
+        images:
+          type: array
+          items:
+            type: string
+          example:
+            - https://example.com/review-photo1.jpg
+            - https://example.com/review-photo2.jpg
+
+    ReviewImage:
+      type: object
+      properties:
+        review_image_id:
+          type: integer
+          example: 1
+        image_url:
+          type: string
+          example: https://example.com/review-photo1.jpg
+
+    Review:
+      type: object
+      properties:
+        review_id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 2
+        product_id:
+          type: integer
+          example: 1
+        order_item_id:
+          type: integer
+          example: 1
+        rating:
+          type: integer
+          example: 5
+        title:
+          type: string
+          example: Sản phẩm rất tốt!
+        comment:
+          type: string
+          example: Chất lượng hoàn thiện rất cao, máy chạy êm và pin trâu.
+        seller_reply:
+          type: string
+          nullable: true
+          example: Cảm ơn bạn đã tin tưởng ủng hộ shop ạ!
+        created_at:
+          type: string
+          format: date-time
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewImage'
+        user:
+          type: object
+          properties:
+            user_id:
+              type: integer
+              example: 2
+            name:
+              type: string
+              example: Nguyen Van A
+            avatar:
+              type: string
+              nullable: true
+              example: https://example.com/avatar.jpg
+
+    ProductReviewListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        product:
+          type: object
+          properties:
+            product_id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: Laptop Gaming Asus ROG Strix
+            rating_avg:
+              type: number
+              example: 4.8
+            review_count:
+              type: integer
+              example: 15
+            rating_breakdown:
+              type: object
+              properties:
+                '5':
+                  type: integer
+                  example: 12
+                '4':
+                  type: integer
+                  example: 2
+                '3':
+                  type: integer
+                  example: 1
+                '2':
+                  type: integer
+                  example: 0
+                '1':
+                  type: integer
+                  example: 0
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+        pagination:
+          type: object
+          properties:
+            total:
+              type: integer
+              example: 15
+            page:
+              type: integer
+              example: 1
+            limit:
+              type: integer
+              example: 10
+            totalPages:
+              type: integer
+              example: 2
+
+    DashboardStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            revenue:
+              type: object
+              properties:
+                total_revenue:
+                  type: number
+                  example: 185000000
+                currency:
+                  type: string
+                  example: VND
+            orders:
+              type: object
+              properties:
+                total_orders:
+                  type: integer
+                  example: 120
+                pending_orders:
+                  type: integer
+                  example: 15
+                confirmed_orders:
+                  type: integer
+                  example: 20
+                shipping_orders:
+                  type: integer
+                  example: 30
+                delivered_orders:
+                  type: integer
+                  example: 50
+                cancelled_orders:
+                  type: integer
+                  example: 5
+            users:
+              type: object
+              properties:
+                total_users:
+                  type: integer
+                  example: 85
+                total_customers:
+                  type: integer
+                  example: 82
+                total_admins:
+                  type: integer
+                  example: 3
+            inventory:
+              type: object
+              properties:
+                total_active_products:
+                  type: integer
+                  example: 45
+                out_of_stock_variants:
+                  type: integer
+                  example: 2
+
+    TopSellingProductsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        limit:
+          type: integer
+          example: 5
+        total_returned:
+          type: integer
+          example: 5
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              rank:
+                type: integer
+                example: 1
+              product_id:
+                type: integer
+                example: 1
+              name:
+                type: string
+                example: iPhone 15 Pro Max
+              image_url:
+                type: string
+                example: https://example.com/iphone.jpg
+              brand:
+                type: string
+                example: Apple
+              price:
+                type: number
+                example: 29990000
+              sold_count:
+                type: integer
+                example: 128
+              rating_avg:
+                type: number
+                example: 4.9
+              review_count:
+                type: integer
+                example: 45
+              category:
+                type: string
+                example: Điện thoại
+              total_stock:
+                type: integer
+                example: 32
+
+    RevenueChartResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        period:
+          type: string
+          example: month
+        year:
+          type: integer
+          example: 2026
+        summary:
+          type: object
+          properties:
+            total_revenue:
+              type: number
+              example: 185000000
+            total_orders:
+              type: integer
+              example: 50
+        chart_data:
+          type: array
+          items:
+            type: object
+            properties:
+              month_number:
+                type: integer
+                example: 1
+              date:
+                type: string
+                example: 2026-09-01
+              label:
+                type: string
+                example: Tháng 1
+              revenue:
+                type: number
+                example: 25000000
+              order_count:
+                type: integer
+                example: 8

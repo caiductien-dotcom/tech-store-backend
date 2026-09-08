@@ -16,6 +16,8 @@ const productRoutes = require('./routes/product.routes');
 const orderRoutes = require('./routes/order.routes');
 const shippingRoutes = require('./routes/shipping.routes');
 const paymentRoutes = require('./routes/payment.routes');
+const reviewRoutes = require('./routes/review.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
 
 const app = express();
 
@@ -34,6 +36,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/shipping', shippingRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/admin/dashboard', dashboardRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({
