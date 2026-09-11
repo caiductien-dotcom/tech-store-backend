@@ -16,7 +16,6 @@ const productRoutes = require('./routes/product.routes');
 const orderRoutes = require('./routes/order.routes');
 const shippingRoutes = require('./routes/shipping.routes');
 const paymentRoutes = require('./routes/payment.routes');
-const cartRoutes = require('./routes/cart.routes');
 
 const app = express();
 
@@ -35,7 +34,6 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/shipping', shippingRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/cart', cartRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({

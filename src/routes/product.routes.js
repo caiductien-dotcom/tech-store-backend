@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/product.controller');
+const reviewController = require('../controllers/review.controller');
 const { verifyToken, isAdmin } = require('../middlewares/auth.middleware');
 
 // public routes (ai cung xem duoc)
 router.get('/', productController.getAllProducts);
 router.get('/:id', productController.getProductById);
+router.get('/:id/reviews', reviewController.getProductReviews);
 
 // protected routes (chi co admin moi duoc phep tao, cap nhat, xoa san pham)
 router.post('/', verifyToken, isAdmin, productController.createProduct);
