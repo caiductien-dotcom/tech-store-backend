@@ -18,6 +18,8 @@ tags:
     description: Product category management APIs
   - name: Product
     description: Product management APIs
+  - name: Cart
+    description: Shopping cart management APIs
   - name: Order
     description: Order checkout and management APIs (Cart-driven & Role-based)
   - name: Shipping
@@ -450,6 +452,111 @@ paths:
         "404":
           description: Product not found.
 
+  /api/cart:
+    get:
+      tags:
+        - Cart
+      summary: Get shopping cart
+      description: Retrieve all items in the customer's cart with summary.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Cart retrieved successfully.
+        '401':
+          description: Unauthorized.
+
+    delete:
+      tags:
+        - Cart
+      summary: Clear entire cart
+      description: Removes all items from the current customer's cart.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Cart cleared successfully.
+
+  /api/cart/items:
+    post:
+      tags:
+        - Cart
+      summary: Add item to cart
+      description: Add a product variant to the cart. Sets is_selected to true automatically.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - variant_id
+              properties:
+                variant_id:
+                  type: integer
+                  example: 1
+                quantity:
+                  type: integer
+                  example: 1
+                  default: 1
+      responses:
+        '200':
+          description: Item added to cart successfully.
+        '400':
+          description: Bad request or out of stock.
+
+  /api/cart/items/{id}:
+    put:
+      tags:
+        - Cart
+      summary: Update cart item
+      description: Update quantity or is_selected status of an item.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: integer
+                  example: 2
+                is_selected:
+                  type: boolean
+                  example: true
+      responses:
+        '200':
+          description: Cart item updated successfully.
+
+    delete:
+      tags:
+        - Cart
+      summary: Remove single item from cart
+      description: Delete a specific item by cart_item_id.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Item removed successfully.
+          
   /api/orders:
     post:
       tags:
