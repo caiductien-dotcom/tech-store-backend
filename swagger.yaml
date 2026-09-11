@@ -1227,8 +1227,6 @@ paths:
           description: Forbidden - Admin role required.
 
 components:
-
-
   securitySchemes:
     BearerAuth:
       type: http
@@ -2027,3 +2025,73 @@ components:
               order_count:
                 type: integer
                 example: 8
+    CartItem:
+      type: object
+      properties:
+        cart_item_id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 2
+        variant_id:
+          type: integer
+          example: 1
+        quantity:
+          type: integer
+          example: 1
+        is_selected:
+          type: boolean
+          example: true
+        variant:
+          $ref: "#/components/schemas/ProductVariant"
+
+    OrderItem:
+      type: object
+      properties:
+        order_item_id:
+          type: integer
+          example: 1
+        order_id:
+          type: integer
+          example: 1
+        variant_id:
+          type: integer
+          example: 1
+        quantity:
+          type: integer
+          example: 1
+        unit_price:
+          type: number
+          format: decimal
+          example: 29990000.00
+        variant:
+          $ref: "#/components/schemas/ProductVariant"
+
+    Payment:
+      type: object
+      properties:
+        payment_id:
+          type: integer
+          example: 1
+        order_id:
+          type: integer
+          example: 1
+        method:
+          type: string
+          example: COD
+        vnp_txn_ref:
+          type: string
+          nullable: true
+          example: null
+        amount:
+          type: number
+          format: decimal
+          example: 29990000.00
+        status:
+          type: string
+          example: pending
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true

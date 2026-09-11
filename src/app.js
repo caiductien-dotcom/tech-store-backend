@@ -10,30 +10,37 @@ const path = require('path');
 // load file swagger.yaml tu thu muc goc cua du an
 const swaggerDocument = YAML.load(path.join(__dirname, '../swagger.yaml'));
 
+// IMPORT ROUTES
 const authRoutes = require('./routes/auth.routes');
 const categoryRoutes = require('./routes/category.routes');
 const productRoutes = require('./routes/product.routes');
-const orderRoutes = require('./routes/order.routes');
+const cartRoutes = require('./routes/cart.routes');
 const shippingRoutes = require('./routes/shipping.routes');
+const orderRoutes = require('./routes/order.routes');
 const paymentRoutes = require('./routes/payment.routes');
+const reviewRoutes = require('./routes/review.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
 
 const app = express();
 
 // MIDDLEWARE
 app.use(cors());
-app.use(express.json()); 
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// giao dien swagger tai duong dan /api-docs
+// Giao dien swagger tai duong dan /api-docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
+app.use('/api/cart', cartRoutes);
 app.use('/api/shipping', shippingRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/admin/dashboard', dashboardRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({
