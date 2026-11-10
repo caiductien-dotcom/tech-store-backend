@@ -1,9 +1,9 @@
 const prisma = require("../prisma/prisma");
 
-// 1. Lay danh sach san pham (phan trang + tim kiem + loc category)
+// 1. Lay danh sach san pham (phan trang + tim kiem + loc category + sort)
 exports.getAllProducts = async (req, res) => {
     try {
-        const { page = 1, limit = 10, search = "", category_id } = req.query;
+        const { page = 1, limit = 10, search = "", category_id, sort = "newest" } = req.query;
         const skip = (Number(page) - 1) * Number(limit);
 
         const where = {
@@ -16,6 +16,16 @@ exports.getAllProducts = async (req, res) => {
 
         if (category_id) {
             where.category_id = Number(category_id);
+        }
+
+        // Xu ly logic sap xep theo Tab cua frontend
+        let orderBy = { created_at: "desc" }; // Mac dinh: moi nhat
+        if (sort === "bestseller") {
+            orderBy = { sold_count: "desc" };
+        } else if (sort === "price_asc") {
+            orderBy = { price: "asc" };
+        } else if (sort === "price_desc") {
+            orderBy = { price: "desc" };
         }
 
         const [products, total] = await Promise.all([
@@ -33,7 +43,7 @@ exports.getAllProducts = async (req, res) => {
                         },
                     },
                 },
-                orderBy: { created_at: "desc" },
+                orderBy,
             }),
             prisma.product.count({ where }),
         ]);
